@@ -1,0 +1,148 @@
+html, body {
+    width:100%;
+    margin: 0;
+    background-color:rgb(70,130,180);
+}
+
+div, pre, h1, h4, h5{
+    /*border: 1px solid red;*/
+    font-size: 15px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    text-transform: none;
+    margin: 0;
+    word-wrap: break-word;
+    
+}
+
+pre {
+    margin: 0;
+    padding:5px 0 0 30px;
+    font-size: 14px;   
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    list-style-type: none;
+}
+
+div.back-title {
+    width:100%;
+    background-color:rgba(70,130,180,0.75);
+    text-align: center;
+    height: 63px;
+    position:fixed;
+    top:0;
+    z-index: 10;
+}		
+
+h1.title {
+    padding: 15px 0 15px 20px;
+    margin: 0 auto;
+    color: white;
+    font-size: 24px;
+    font-weight: 300;
+    text-transform: none;
+}
+
+div.back-main {
+    margin-top:63px;
+    width:100%;
+    background-color:rgb(70,130,180);/* SteelBlue; */
+}
+
+div.main {
+    padding: 40px 40px;
+    width: 640px;
+    margin: 0 auto;
+    background-color:#F6FDF6;
+    clear: both;
+    position:relative;
+    z-index:1;
+}
+
+div.frame {
+
+}
+
+h4.frame-title {
+    padding: 0;
+    font-size: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.frame-content {
+    padding:5px 30px 15px 30px;
+    margin: 0
+    font-size: 15px;
+}
+
+span.function-name {
+    font-weight: bold;
+}
+
+span.class-name {
+    font-weight: bold;
+}
+
+span.class-function-name {
+    font-weight: bold;
+}
+
+span.function-args {
+    color:red;
+}
+
+span.function-kw {
+    color:green;
+}
+
+span.function-kwdef {
+    color:green;
+    font-style: italic;
+}
+
+li.functions, li.class-functions, li.classes{
+    padding-bottom: 10px;
+}
+
+h5.class-title {
+    padding: 0;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: capitalize;
+    padding-top: 15px;
+}
+
+div.class-main {
+    padding:0 30px;
+    font-size: 12px;
+    background-color: rgb(248, 255, 220);
+    margin-top: 5px;
+}
+
+
+pre.class-docstring {
+    margin-left:-30px;
+}
+
+div.class-content {
+    padding: 5px 0 0 30px;
+    font-size: 14px;    
+}
+
+div#classesframe div.frame-content, div#functionsframe div.frame-content {
+    padding-top: 15px;
+}
+
+div.credits {
+    font-size: 12px;
+    position:absolute;
+    right: 30px;
+    bottom: 10px;
+}

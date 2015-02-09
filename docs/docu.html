@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+ <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,300italic" rel="stylesheet" type="text/css">
+ <title>Software Documentation: docu.py</title>
+ <link href="docu.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+ <div class="back-title">
+  <h1 class="title">Software Documentation: docu.py</h1>
+ </div>
+ <div class="back-main">
+ <div class="main">
+ <div class="frame" id="nameframe">
+  <h4 class="frame-title">module name</h4>
+  <div class="frame-content">docu</div>
+ </div>
+ <div class="frame" id="nameframe">
+  <h4 class="frame-title">version</h4>
+  <div class="frame-content">1.0</div>
+ </div>
+ <div class="frame" id="descriptionframe">
+  <h4 class="frame-title">DESCRIPTION</h4>
+  <pre class="frame-content">.. module: mypydoc</br>.. moduleauthor: Julien Spronck</br>.. created: Feb 5, 2015</br></br>This module is similar to python's pydoc with added flexibility. For example,</br>the parse function returns a tuple with all dependent modules, variables,</br>functions, classes and their docstrings. This allows for a complete</br>customization of the output. Also, the save_as_html() function returns a more</br>modern html version compared to pydoc, which allows for complete CSS styling.</pre>
+ </div>
+ <div class="frame" id="modulesframe">
+  <h4 class="frame-title">dependent modules</h4>
+  <div class="frame-content">
+   <ul class="modules">
+    <li class="modules">operator</li>
+    <li class="modules">re</li>
+    <li class="modules">sys</li>
+   </ul>
+  </div>
+ </div>
+ <div class="frame" id="variablesframe">
+  <h4 class="frame-title">variables</h4>
+  <div class="frame-content">
+   <ul class="variables">
+    <li class="variables">LEFT_PAR</li>
+    <li class="variables">RIGHT_PAR</li>
+    <li class="variables">VALID_VAR</li>
+   </ul>
+  </div>
+ </div>
+ <div class="frame" id="functionsframe">
+  <h4 class="frame-title">functions</h4>
+  <div class="frame-content">
+   <ul class="functions">
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">add_missing_docstring</span>(<span class="function-args">module_file_name</span>)</div>
+      <pre class="function-docstring">Args:</br>    module_file_name (): .</br></br>Returns:</br></br>Raises:</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_class</span>(<span class="function-args">lines</span>, <span class="function-args">jline</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>)</div>
+      <pre class="function-docstring">Returns the class definition if there is one at line lines[jline].</br></br>Args:</br>    lines (list of str): the list of lines representing the file to</br>        document. lines should be the result of file.readlines().</br>    jline (int): the index at which you wish to start the search</br>    indent (int, optional): the indentation at which you are looking for the</br>        docstring (typically 0, 4, 8, ...). Defaults to 0.</br>Returns:</br>    {'name': str, 'inheritance': str, 'modules':list of str, 'variables':</br>        list of str, 'functions':list of function dictionaries (see</br>        get_function()), 'docstring':str}: dictionary with the name of the</br>        class, its inheritance, its modules, variables, methods and the</br>        class's docstring.</br>    int: new jline index.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_docstring</span>(<span class="function-args">lines</span>, <span class="function-args">jline</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>, <span class="function-kw">skip_first</span>=<span class="function-kwdef">True</span>)</div>
+      <pre class="function-docstring">Gets the next docstring, defined between two sets of three quotes (</br>single or double).</br>Args:</br>    lines (list of str): the list of lines representing the file to</br>        document. lines should be the result of file.readlines().</br>    jline (int): the index at which you wish to start the search</br>    indent (int, optional): the indentation at which you are looking for the</br>        docstring (typically 0, 4, 8, ...). Defaults to 0.</br>    skip_first (bool, optional): If True, the first line to look is</br>        lines[jline]. Otherwise, it is lines[jline - 1]. Defaults to True.</br>Returns:</br>    (str, int): a tuple containing the found docstring and the index of the</br>        line after.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_exception</span>(<span class="function-args">line</span>)</div>
+      <pre class="function-docstring">Args:</br>    line (): .</br></br>Returns:</br></br>Raises:</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_function</span>(<span class="function-args">lines</span>, <span class="function-args">jline</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>)</div>
+      <pre class="function-docstring">Returns the function definition if there is one at line lines[jline].</br>Args:</br>    lines (list of str): the list of lines representing the file to</br>        document. lines should be the result of file.readlines().</br>    jline (int): the index at which you wish to start the search</br>    indent (int, optional): the indentation at which you are looking for the</br>        docstring (typically 0, 4, 8, ...). Defaults to 0.</br>Returns:</br>    {'name': str, 'args': list of str, 'keywords': list of str, 'defaults':</br>        list of str, 'docstring':str}: dictionary with the name of the</br>        function, its arguments, keywords with default values and the</br>        function's docstring.</br>    int: new jline index.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_help</span>(<span class="function-args">module_file_name</span>, <span class="function-kw">output</span>=<span class="function-kwdef">False</span>)</div>
+      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>either displays it to screen (output= False) or returns it into a variable</br>(output= True)</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>    output (bool, optional): if False, prints to screen. If True, returns</br>        results into variable. Defaults to False.</br>Returns:</br>    If output= True:</br>        str: the string containing the formatted documentation.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_indent</span>(<span class="function-args">line</span>)</div>
+      <pre class="function-docstring">Gets the indentation of a given line (number of spaces).</br>Args:</br>    line (str): the line</br>Returns:</br>    int: length of indentation</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_module</span>(<span class="function-args">line</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>)</div>
+      <pre class="function-docstring">Gets the names of an imported module from a line if the line is of the</br>'import' type</br>Args:</br>    line (str): the line</br>    indent (int, optional): the indentation at which you are looking for the</br>        docstring (typically 0, 4, 8, ...). Defaults to 0.</br>Returns:</br>    str: name of imported module</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_variable</span>(<span class="function-args">line</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>)</div>
+      <pre class="function-docstring">Gets the names of a global module variable from a line if the line is of</br>the 'variable declaration' type</br>Args:</br>    line (str): the line</br>    indent (int, optional): the indentation at which you are looking for the</br>        docstring (typically 0, 4, 8, ...). Defaults to 0.</br>Returns:</br>    {'name': str, 'value': obj}: dictionary with the name of the variable</br>        and its value when originally set.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">get_version</span>(<span class="function-args">line</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>)</div>
+      <pre class="function-docstring">Gets the version number</br>Args:</br>    line (str): the line</br>    indent (int, optional): the indentation at which you are looking for the</br>        docstring (typically 0, 4, 8, ...). Defaults to 0.</br>Returns:</br>    str: version number</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">make_function_docstring</span>(<span class="function-args">func</span>, <span class="function-kw">indent</span>=<span class="function-kwdef">0</span>, <span class="function-kw">verbose</span>=<span class="function-kwdef">True</span>)</div>
+      <pre class="function-docstring">Args:</br>    func (): .</br>    indent (, optional): . Defaults to 0.</br>    verbose (, optional): . Defaults to True.</br></br>Returns:</br></br>Raises:</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">next_line</span>(<span class="function-args">lines</span>, <span class="function-args">jline</span>)</div>
+      <pre class="function-docstring">Finds the next non-empty line in the file ans strip the comments out.</br>Args:</br>    lines (list of str): the list of lines representing the file to</br>        document. lines should be the result of file.readlines().</br>    jline (int): the index at which you wish to start the search</br>Returns:</br>    (str, int): a tuple containing the non-empty line and the index of the</br>        line after.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">parse</span>(<span class="function-args">module_file_name</span>)</div>
+      <pre class="function-docstring">Reads the module module_file_name and parses it to figure out the</br>modulename, the module description, the module version, the dependent</br>modules, the global variables, the functions and the class.</br></br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>Returns:</br>    modulename (str), description (str), version (str), modules (list of</br>        str), variables (list of variable dictionnaries), functions</br>        (list of function dictionnaries) and classes (list of class</br>        dictionnaries)</br></br>Raises:</br>    FileTypeError: wrong file type.</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">prepare_docstring</span>(<span class="function-args">module_file_name</span>, <span class="function-args">function_name</span>)</div>
+      <pre class="function-docstring">Helps preparing a function/method's docstring</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation.</br>    function_name (str): string containing the function/method name.</br>Returns:</br>Raises:</br>    ValueError</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">save_as_html</span>(<span class="function-args">module_file_name</span>, <span class="function-kw">outputfile</span>=<span class="function-kwdef">None</span>, <span class="function-kw">outputdir</span>=<span class="function-kwdef">''</span>)</div>
+      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>writes it into an html file.</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation. If it is a directory, it will</br>        build the documentation for all .py files in that directory.</br>    outputfile (str, optional): Name of the file to write the output. If not</br>        provided, the module name with a .txt extension will be used.</br>        Defaults to None.</br>    outputdir (str, optional): The directory where to save the text file.</br>        Defaults to ''</br>Returns:</br>    no output</pre>
+     </div>
+    </li>
+    <li class="functions">
+     <div class="function">
+      <div class="function-name"><span class="function-name">save_as_text</span>(<span class="function-args">module_file_name</span>, <span class="function-kw">outputfile</span>=<span class="function-kwdef">None</span>, <span class="function-kw">outputdir</span>=<span class="function-kwdef">''</span>)</div>
+      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>writes it into a text file.</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>    outputfile (str, optional): Name of the file to write the output. If not</br>        provided, the module name with a .txt extension will be used.</br>        Defaults to None.</br>    outputdir (str, optional): The directory where to save the text file.</br>        Defaults to ''</br>Returns:</br>    no output</pre>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </div> 
+ <div class="frame" id="classesframe">
+  <h4 class="frame-title">classes</h4>
+  <div class="frame-content">
+   <ul class="classes">
+    <li class="classes">
+     <div class="class">
+      <div class="class-name"><span class="class-name">FileTypeError</span>(<span class="class-arg">Exception</span>)</div>
+       <div class="class-main">
+      <pre class="class-docstring">A custom exception for handling wrong file types</pre>
+     </div>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </div>
+ <div class="credits">This page was made with <a href="">docu 1.0</a>
+ </div>
+ </div>
+ </div>
+</body>
+</html>
