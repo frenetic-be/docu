@@ -1,2 +1,7 @@
 dist/docu-1.0
-dist/docu-1.0
+dist/docu-1.0/*
+.gitignore~
+MANIFEST
+.DS_Store
+dist/.DS_Store
+dist/.DS_Store

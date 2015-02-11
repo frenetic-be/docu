@@ -2,7 +2,7 @@ NAME
     docu
 
 DESCRIPTION
-    .. module: mypydoc
+    .. module: docu
     .. moduleauthor: Julien Spronck
     .. created: Feb 5, 2015
     
@@ -14,11 +14,12 @@ DESCRIPTION
 
 
 VERSION
-    1.0
+    1.1
 
 
 MODULES
     operator
+    pkgutil
     re
     sys
 
@@ -99,13 +100,16 @@ FUNCTIONS
      |  either displays it to screen (output= False) or returns it into a variable
      |  (output= True)
      |  Args:
-     |      module_file_name (str): string containing the file name for which you
-     |          want to see/get the documentation
+     |      module_file_name (str): string containing the file or module name
+     |          for which you want to see/get the documentation
      |      output (bool, optional): if False, prints to screen. If True, returns
      |          results into variable. Defaults to False.
      |  Returns:
      |      If output= True:
+     |          modulename: str with module name,
      |          str: the string containing the formatted documentation.
+     |  
+     |  Raises:
 
     get_indent(line)
      |  Gets the indentation of a given line (number of spaces).
@@ -180,6 +184,8 @@ FUNCTIONS
      |  
      |  Raises:
      |      FileTypeError: wrong file type.
+     |      IOError: Module could not be loaded
+     |      TypeError: Argument must be a string.
 
     prepare_docstring(module_file_name, function_name)
      |  Helps preparing a function/method's docstring
@@ -205,6 +211,9 @@ FUNCTIONS
      |          Defaults to ''
      |  Returns:
      |      no output
+     |  
+     |  Raises:
+     |      TypeError: wrong file type.
 
     save_as_text(module_file_name, outputfile=None, outputdir='')
      |  Builds the documentation for the module module_file_name, formats it and
@@ -219,6 +228,10 @@ FUNCTIONS
      |          Defaults to ''
      |  Returns:
      |      no output
+     |  
+     |  
+     |  Raises:
+     |      TypeError: wrong file type.
 
 
 

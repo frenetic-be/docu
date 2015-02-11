@@ -14,8 +14,9 @@ modern html version compared to pydoc, which allows for complete CSS styling.
 import re
 import sys
 from operator import itemgetter
+import pkgutil
 
-__version__ = '1.0'
+__version__ = '1.1'
 
 VALID_VAR = "([_A-Za-z][_a-zA-Z0-9]*)"
 LEFT_PAR = '\('
@@ -348,30 +349,18 @@ def get_help(module_file_name, output=False):
     either displays it to screen (output= False) or returns it into a variable
     (output= True)
     Args:
-        module_file_name (str): string containing the file name for which you
-            want to see/get the documentation
+        module_file_name (str): string containing the file or module name
+            for which you want to see/get the documentation
         output (bool, optional): if False, prints to screen. If True, returns
             results into variable. Defaults to False.
     Returns:
         If output= True:
+            modulename: str with module name, 
             str: the string containing the formatted documentation.
 
     Raises:
-        FileTypeError: wrong file type.
     '''
     import os
-    from types import ModuleType
-
-    if isinstance(module_file_name, ModuleType):
-        module_file_name = module_file_name.__file__
-    elif not isinstance(module_file_name, str):
-        raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
-    elif os.path.isdir(module_file_name):
-        raise FileTypeError("Wrong file type. This function cannot handle directories.")
-    else:
-        extension = os.path.splitext(os.path.basename(module_file_name))[-1]
-        if extension != '.py':
-            raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
 
     (modulename, description, version, modules, variables,
      functions, classes) = parse(module_file_name)
@@ -442,7 +431,7 @@ def get_help(module_file_name, output=False):
                     astr += '\n' + '     |       |  '+line
                 astr += '\n' + '     |  '
     if output:
-        return astr
+        return modulename, astr
     else:
         print astr
 
@@ -464,30 +453,30 @@ def save_as_text(module_file_name, outputfile=None, outputdir=''):
 
 
     Raises:
-        FileTypeError: wrong file type.
+        TypeError: wrong file type.
     '''
     import os
-    from types import ModuleType
 
-    if isinstance(module_file_name, ModuleType):
-        module_file_name = module_file_name.__file__
-    elif not isinstance(module_file_name, str):
-        raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
+    if not isinstance(module_file_name, str):
+        raise TypeError("Argument must be a string")
+
     elif os.path.isdir(module_file_name):
-        ## If directory, create html files for all python files in the directory
-        import glob
-        files = glob.glob(os.path.join(module_file_name, '*.py'))
-        for fil in files:
-            save_as_text(fil, outputdir=outputdir)
-        return
-    else:
-        extension = os.path.splitext(os.path.basename(module_file_name))[-1]
-        if extension != '.py':
-            raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
+        if module_file_name.endswith(os.path.sep):
+            module_file_name = os.path.split(module_file_name)[0]
+        pkg = pkgutil.get_loader(module_file_name)
+        if not pkg:
+            ## If directory, create html files for all python files in the directory
+            import glob
+            files = glob.glob(os.path.join(module_file_name, '*.py'))
+            print ('Not a python module. Making documentation for all .py files'
+                   ' in directory ({0} files).').format(len(files))
+            for fil in files:
+                save_as_text(fil, outputdir=outputdir)
+            return
 
-    astr = get_help(module_file_name, output=True)
+    modulename, astr = get_help(module_file_name, output=True)
     if not outputfile:
-        outputfile = '.'.join(module_file_name.split('.')[:-1])+'.txt'
+        outputfile = modulename + '.txt'
     outputfile = os.path.join(outputdir, outputfile)
     print 'Created text file: '+outputfile
     with open(outputfile, 'w') as the_file:
@@ -510,26 +499,26 @@ def save_as_html(module_file_name, outputfile=None, outputdir=''):
         no output
 
     Raises:
-        FileTypeError: wrong file type.
+        TypeError: wrong file type.
     '''
     import os
-    from types import ModuleType
 
-    if isinstance(module_file_name, ModuleType):
-        module_file_name = module_file_name.__file__
-    elif not isinstance(module_file_name, str):
-        raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
+    if not isinstance(module_file_name, str):
+        raise TypeError("Argument must be a string")
+
     elif os.path.isdir(module_file_name):
-        ## If directory, create html files for all python files in the directory
-        import glob
-        files = glob.glob(os.path.join(module_file_name, '*.py'))
-        for fil in files:
-            save_as_html(fil, outputdir=outputdir)
-        return
-    else:
-        extension = os.path.splitext(os.path.basename(module_file_name))[-1]
-        if extension != '.py':
-            raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
+        if module_file_name.endswith(os.path.sep):
+            module_file_name = os.path.split(module_file_name)[0]
+        pkg = pkgutil.get_loader(module_file_name)
+        if not pkg:
+            ## If directory, create html files for all python files in the directory
+            import glob
+            files = glob.glob(os.path.join(module_file_name, '*.py'))
+            print ('Not a python module. Making documentation for all .py files'
+                   ' in directory ({0} files).').format(len(files))
+            for fil in files:
+                save_as_html(fil, outputdir=outputdir)
+            return
 
     (modulename, description, version, modules, variables, functions,
      classes) = parse(module_file_name)
@@ -538,13 +527,13 @@ def save_as_html(module_file_name, outputfile=None, outputdir=''):
     astr += '\n<head>'
     astr += ('\n <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,'
              '400,300italic" rel="stylesheet" type="text/css">')
-    astr += '\n <title>Software Documentation: {0}</title>'.format(modulename+'.py')
+    astr += '\n <title>Python Documentation: {0}</title>'.format(modulename)
     astr += '\n <link href="docu.css" rel="stylesheet" type="text/css">'
     astr += '\n</head>'
     astr += '\n<body>'
     astr += '\n <div class="back-title">'
-    astr += ('\n  <h1 class="title">Software Documentation: '
-             '{0}</h1>').format(modulename+'.py')
+    astr += ('\n  <h1 class="title">Python Documentation: '
+             '{0}</h1>').format(modulename)
     astr += '\n </div>'
     astr += '\n <div class="back-main">'
     astr += '\n <div class="main">'
@@ -690,14 +679,14 @@ def save_as_html(module_file_name, outputfile=None, outputdir=''):
         astr += '\n </div>'
         astr += '\n <div class="credits">This page was made with '
         astr += '<a href="">docu {0}</a>'.format(__version__)
-        astr += '\n </div>'        
+        astr += '\n </div>'
         astr += '\n </div>'
         astr += '\n </div>'
 
     astr += '\n</body>'
     astr += '\n</html>'
     if not outputfile:
-        outputfile = os.path.splitext(os.path.basename(module_file_name))[0]+'.html'
+        outputfile = modulename + '.html'
     outputfile = os.path.join(outputdir, outputfile)
     print 'Created html file: '+outputfile
     with open(outputfile, 'w') as the_file:
@@ -720,20 +709,36 @@ def parse(module_file_name):
 
     Raises:
         FileTypeError: wrong file type.
+        IOError: Module could not be loaded
+        TypeError: Argument must be a string.
     '''
     import os
-    from types import ModuleType
 
-    if isinstance(module_file_name, ModuleType):
-        module_file_name = module_file_name.__file__
-    elif not isinstance(module_file_name, str):
-        raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
-    elif os.path.isdir(module_file_name):
-        raise FileTypeError("Wrong file type. This function cannot handle directories.")
+    if not isinstance(module_file_name, str):
+        raise TypeError("Argument must be a string")
 
-    modulename, extension = os.path.splitext(os.path.basename(module_file_name))
-    if extension != '.py':
-        raise FileTypeError("Wrong file type. This function can only handle python files ('.py') or python modules.")
+    mname, extension = os.path.splitext(os.path.basename(module_file_name))
+
+    if extension == '':
+        if module_file_name.endswith(os.path.sep):
+            module_file_name = os.path.split(module_file_name)[0]
+        pkg = pkgutil.get_loader(module_file_name)
+        if not pkg:
+            raise IOError('Module '+module_file_name+' could not be loaded')
+        modulename = pkg.fullname
+        module_file_name = pkg.filename
+        if not module_file_name.endswith('.py'):
+            module_file_name = os.path.join(pkg.filename, '__init__.py')
+
+    elif extension == '.pyc':
+        module_file_name = module_file_name[:-1]
+        modulename = mname
+    elif extension != '.py':
+        raise FileTypeError("Wrong file type. This function can only handle "
+                            "python files ('.py') or python modules.")
+    else:
+        modulename = mname
+
     modules = []
     variables = []
     functions = []

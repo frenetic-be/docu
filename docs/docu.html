@@ -2,12 +2,12 @@
 <html>
 <head>
  <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,300italic" rel="stylesheet" type="text/css">
- <title>Software Documentation: docu.py</title>
+ <title>Python Documentation: docu</title>
  <link href="docu.css" rel="stylesheet" type="text/css">
 </head>
 <body>
  <div class="back-title">
-  <h1 class="title">Software Documentation: docu.py</h1>
+  <h1 class="title">Python Documentation: docu</h1>
  </div>
  <div class="back-main">
  <div class="main">
@@ -17,17 +17,18 @@
  </div>
  <div class="frame" id="nameframe">
   <h4 class="frame-title">version</h4>
-  <div class="frame-content">1.0</div>
+  <div class="frame-content">1.1</div>
  </div>
  <div class="frame" id="descriptionframe">
   <h4 class="frame-title">DESCRIPTION</h4>
-  <pre class="frame-content">.. module: mypydoc</br>.. moduleauthor: Julien Spronck</br>.. created: Feb 5, 2015</br></br>This module is similar to python's pydoc with added flexibility. For example,</br>the parse function returns a tuple with all dependent modules, variables,</br>functions, classes and their docstrings. This allows for a complete</br>customization of the output. Also, the save_as_html() function returns a more</br>modern html version compared to pydoc, which allows for complete CSS styling.</pre>
+  <pre class="frame-content">.. module: docu</br>.. moduleauthor: Julien Spronck</br>.. created: Feb 5, 2015</br></br>This module is similar to python's pydoc with added flexibility. For example,</br>the parse function returns a tuple with all dependent modules, variables,</br>functions, classes and their docstrings. This allows for a complete</br>customization of the output. Also, the save_as_html() function returns a more</br>modern html version compared to pydoc, which allows for complete CSS styling.</pre>
  </div>
  <div class="frame" id="modulesframe">
   <h4 class="frame-title">dependent modules</h4>
   <div class="frame-content">
    <ul class="modules">
     <li class="modules">operator</li>
+    <li class="modules">pkgutil</li>
     <li class="modules">re</li>
     <li class="modules">sys</li>
    </ul>
@@ -80,7 +81,7 @@
     <li class="functions">
      <div class="function">
       <div class="function-name"><span class="function-name">get_help</span>(<span class="function-args">module_file_name</span>, <span class="function-kw">output</span>=<span class="function-kwdef">False</span>)</div>
-      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>either displays it to screen (output= False) or returns it into a variable</br>(output= True)</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>    output (bool, optional): if False, prints to screen. If True, returns</br>        results into variable. Defaults to False.</br>Returns:</br>    If output= True:</br>        str: the string containing the formatted documentation.</pre>
+      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>either displays it to screen (output= False) or returns it into a variable</br>(output= True)</br>Args:</br>    module_file_name (str): string containing the file or module name</br>        for which you want to see/get the documentation</br>    output (bool, optional): if False, prints to screen. If True, returns</br>        results into variable. Defaults to False.</br>Returns:</br>    If output= True:</br>        modulename: str with module name,</br>        str: the string containing the formatted documentation.</br></br>Raises:</pre>
      </div>
     </li>
     <li class="functions">
@@ -122,7 +123,7 @@
     <li class="functions">
      <div class="function">
       <div class="function-name"><span class="function-name">parse</span>(<span class="function-args">module_file_name</span>)</div>
-      <pre class="function-docstring">Reads the module module_file_name and parses it to figure out the</br>modulename, the module description, the module version, the dependent</br>modules, the global variables, the functions and the class.</br></br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>Returns:</br>    modulename (str), description (str), version (str), modules (list of</br>        str), variables (list of variable dictionnaries), functions</br>        (list of function dictionnaries) and classes (list of class</br>        dictionnaries)</br></br>Raises:</br>    FileTypeError: wrong file type.</pre>
+      <pre class="function-docstring">Reads the module module_file_name and parses it to figure out the</br>modulename, the module description, the module version, the dependent</br>modules, the global variables, the functions and the class.</br></br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>Returns:</br>    modulename (str), description (str), version (str), modules (list of</br>        str), variables (list of variable dictionnaries), functions</br>        (list of function dictionnaries) and classes (list of class</br>        dictionnaries)</br></br>Raises:</br>    FileTypeError: wrong file type.</br>    IOError: Module could not be loaded</br>    TypeError: Argument must be a string.</pre>
      </div>
     </li>
     <li class="functions">
@@ -134,13 +135,13 @@
     <li class="functions">
      <div class="function">
       <div class="function-name"><span class="function-name">save_as_html</span>(<span class="function-args">module_file_name</span>, <span class="function-kw">outputfile</span>=<span class="function-kwdef">None</span>, <span class="function-kw">outputdir</span>=<span class="function-kwdef">''</span>)</div>
-      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>writes it into an html file.</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation. If it is a directory, it will</br>        build the documentation for all .py files in that directory.</br>    outputfile (str, optional): Name of the file to write the output. If not</br>        provided, the module name with a .txt extension will be used.</br>        Defaults to None.</br>    outputdir (str, optional): The directory where to save the text file.</br>        Defaults to ''</br>Returns:</br>    no output</pre>
+      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>writes it into an html file.</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation. If it is a directory, it will</br>        build the documentation for all .py files in that directory.</br>    outputfile (str, optional): Name of the file to write the output. If not</br>        provided, the module name with a .txt extension will be used.</br>        Defaults to None.</br>    outputdir (str, optional): The directory where to save the text file.</br>        Defaults to ''</br>Returns:</br>    no output</br></br>Raises:</br>    TypeError: wrong file type.</pre>
      </div>
     </li>
     <li class="functions">
      <div class="function">
       <div class="function-name"><span class="function-name">save_as_text</span>(<span class="function-args">module_file_name</span>, <span class="function-kw">outputfile</span>=<span class="function-kwdef">None</span>, <span class="function-kw">outputdir</span>=<span class="function-kwdef">''</span>)</div>
-      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>writes it into a text file.</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>    outputfile (str, optional): Name of the file to write the output. If not</br>        provided, the module name with a .txt extension will be used.</br>        Defaults to None.</br>    outputdir (str, optional): The directory where to save the text file.</br>        Defaults to ''</br>Returns:</br>    no output</pre>
+      <pre class="function-docstring">Builds the documentation for the module module_file_name, formats it and</br>writes it into a text file.</br>Args:</br>    module_file_name (str): string containing the file name for which you</br>        want to see/get the documentation</br>    outputfile (str, optional): Name of the file to write the output. If not</br>        provided, the module name with a .txt extension will be used.</br>        Defaults to None.</br>    outputdir (str, optional): The directory where to save the text file.</br>        Defaults to ''</br>Returns:</br>    no output</br></br></br>Raises:</br>    TypeError: wrong file type.</pre>
      </div>
     </li>
    </ul>
@@ -161,7 +162,7 @@
    </ul>
   </div>
  </div>
- <div class="credits">This page was made with <a href="">docu 1.0</a>
+ <div class="credits">This page was made with <a href="">docu 1.1</a>
  </div>
  </div>
  </div>
