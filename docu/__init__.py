@@ -16,7 +16,7 @@ import sys
 from operator import itemgetter
 import pkgutil
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 VALID_VAR = "([_A-Za-z][_a-zA-Z0-9]*)"
 LEFT_PAR = '\('
@@ -28,37 +28,30 @@ class FileTypeError(Exception):
     '''
     pass
 
-def next_line(lines, jline):
-    '''
-    Finds the next non-empty line in the file ans strip the comments out.
-    Args:
-        lines (list of str): the list of lines representing the file to
-            document. lines should be the result of file.readlines().
-        jline (int): the index at which you wish to start the search
-    Returns:
-        (str, int): a tuple containing the non-empty line and the index of the
-            line after.
-    '''
-    nlines = len(lines)
-    if jline < nlines:
-        line = lines[jline]
-        jline += 1
-    else:
-        return '', jline
-    ## strip comments
-    line = line.split('#')[0].rstrip()
-    ## Skip empty lines
-    res = re.search('^$', line)
-    while res:
-        if jline < nlines:
-            line = lines[jline]
-            jline += 1
+def non_empty_lines(fil, verb=False):
+    inside_docstring = False
+    for line in fil:
+        if not inside_docstring:
+            res = re.search('^ *(\'\'\'|\"\"\")(.*?)(\'\'\'|\"\"\")?$', line)
+            if res and res.group(3):
+                pass ## one-line docstring
+            elif res:
+                inside_docstring = True
         else:
-            break
-        ## strip comments
-        line = line.split('#')[0].rstrip()
-        res = re.search('^$', line)
-    return line, jline
+            line2 = line.split('#')[0].rstrip()
+            res = re.search('(\'\'\'|\"\"\")$', line2)
+            if res:
+                inside_docstring = False
+        if inside_docstring:
+            yield line.rstrip()
+        else:
+            line = line.split('#')[0].rstrip()
+            if line:
+                yield line
+
+def all_lines(fil, verb=False):
+    for line in fil:
+        yield line
 
 def get_indent(line):
     '''
@@ -72,59 +65,6 @@ def get_indent(line):
     if res:
         return len(res.group(1))
     return 0
-
-def get_docstring(lines, jline, indent=0, skip_first=True):
-    '''
-    Gets the next docstring, defined between two sets of three quotes (
-    single or double).
-    Args:
-        lines (list of str): the list of lines representing the file to
-            document. lines should be the result of file.readlines().
-        jline (int): the index at which you wish to start the search
-        indent (int, optional): the indentation at which you are looking for the
-            docstring (typically 0, 4, 8, ...). Defaults to 0.
-        skip_first (bool, optional): If True, the first line to look is
-            lines[jline]. Otherwise, it is lines[jline - 1]. Defaults to True.
-    Returns:
-        (str, int): a tuple containing the found docstring and the index of the
-            line after.
-    '''
-    out = ''
-    nlines = len(lines)
-    if not skip_first:
-        jline = jline - 1 if jline > 0 else 0
-    if jline < nlines:
-        line = lines[jline]
-        jline += 1
-    else:
-        return out, jline
-    line = line.rstrip()
-    res = re.search('^ {'+str(indent)+'}(\'\'\'|\"\"\")(.*?)(\'\'\'|\"\"\")?$',
-                    line)
-    if res:
-        out = res.group(2)
-        if res.group(3):
-            return out, jline
-        if jline < nlines:
-            line = lines[jline]
-            jline += 1
-        else:
-            return out, jline
-        while 1:
-            line = line.rstrip()
-            res = re.search('(\'\'\'|\"\"\")$', line)
-            if res:
-                if line[indent:-3] != '':
-                    out += '\n' + line[indent:-3]
-                break
-            else:
-                out += '\n' + line[indent:]
-            if jline < nlines:
-                line = lines[jline]
-                jline += 1
-            else:
-                break
-    return out.strip(), jline
 
 def get_module(line, indent=0):
     '''
@@ -198,47 +138,70 @@ def get_exception(line):
         return res.group(1)
     return ''
 
-def get_function(lines, jline, indent=0):
+def get_docstring(line, lines, indent=0):
     '''
-    Returns the function definition if there is one at line lines[jline].
+    Gets the next docstring, defined between two sets of three quotes (
+    single or double).
     Args:
+        line (str): the line to check for function definition    
         lines (list of str): the list of lines representing the file to
             document. lines should be the result of file.readlines().
-        jline (int): the index at which you wish to start the search
         indent (int, optional): the indentation at which you are looking for the
             docstring (typically 0, 4, 8, ...). Defaults to 0.
     Returns:
+        line (str): the current line
+        docstring (str): the docstring
+    '''
+    out = ''
+    res = re.search('^ {'+str(indent)+'}(\'\'\'|\"\"\")(.*?)(\'\'\'|\"\"\")?$',
+                    line)
+    if res:
+        out = res.group(2)
+        if res.group(3):
+            return line, out ## docstring ended on first line
+        line = lines.next()
+        while 1:
+            res = re.search('(\'\'\'|\"\"\")$', line)
+            if res:
+                if line[indent:-3] != '':
+                    out += '\n' + line[indent:-3]
+                line = lines.next()
+                break
+            else:
+                out += '\n' + line[indent:]
+            line = lines.next()
+    return line, out.strip()
+
+def get_function(line, lines, indent=0):
+    '''
+    Returns the function definition if there is one at line lines[jline].
+    Args:
+        line (str): the line to check for function definition
+        lines (list of str): the list of lines representing the file to
+            document. lines should be the result of file.readlines().
+        indent (int, optional): the indentation at which you are looking for the
+            docstring (typically 0, 4, 8, ...). Defaults to 0.
+    Returns:
+        line: the current line
         {'name': str, 'args': list of str, 'keywords': list of str, 'defaults':
             list of str, 'docstring':str}: dictionary with the name of the
             function, its arguments, keywords with default values and the
             function's docstring.
-        int: new jline index.
     '''
-    jline = jline - 1 if jline > 0 else 0
-    if jline < len(lines):
-        line = lines[jline]
-        jline += 1
-    else:
-        return None, jline
-    line = line.split('#')[0].rstrip()
     res = re.search('^ {'+str(indent)+'}def '+VALID_VAR+LEFT_PAR+'(.*?)('+RIGHT_PAR+
                     ':)?$', line)
     if res:
         allargs = res.group(2)
         endpar = res.group(3)
         while not endpar:
-            if jline < len(lines):
-                line = lines[jline]
-                jline += 1
-            else:
-                return None, jline
-            line = line.split('#')[0].rstrip()
+            line = lines.next()
             res2 = re.search('^ *(.*?)('+RIGHT_PAR+':)?$', line)
             if res2:
                 allargs += res2.group(1)
                 endpar = res2.group(2)
         ## Function name
         name = res.group(1)
+        docstring = ''
         args = []
         keywords = []
         defaults = []
@@ -254,50 +217,46 @@ def get_function(lines, jline, indent=0):
             if res2:
                 keywords.append(res2.group(1))
                 defaults.append(res2.group(2))
-        ## Docstring
-        line, jline = next_line(lines, jline)
-        indent0 = get_indent(line)
-        docstring, jline = get_docstring(lines, jline, indent=indent0,
-                                         skip_first=False)
-        while get_indent(line) >= indent0 and jline < len(lines):
-            line, jline = next_line(lines, jline)
-            exc = get_exception(line)
-            if exc:
-                exceptions.append(exc)
-        jline -= 1
-        return ({'name':name,
-                 'args':args,
-                 'keywords':keywords,
-                 'defaults':defaults,
-                 'docstring':docstring,
-                 'exceptions':exceptions}, jline)
-    return None, jline
+        try:
+            ## Docstring
+            line = lines.next()
+            indent0 = get_indent(line)
+            line, docstring = get_docstring(line, lines, indent=indent0)
+            while get_indent(line) >= indent0:
+                line = lines.next()
+                exc = get_exception(line)
+                if exc:
+                    exceptions.append(exc)
+        except StopIteration:
+            line = None
+            pass
 
-def get_class(lines, jline, indent=0):
+        return (line, {'name': name,
+                       'args': args,
+                       'keywords': keywords,
+                       'defaults': defaults,
+                       'docstring': docstring,
+                       'exceptions': exceptions})
+    return line, None
+
+def get_class(line, lines, indent=0):
     '''
     Returns the class definition if there is one at line lines[jline].
 
     Args:
+        line (str): the line to check for function definition    
         lines (list of str): the list of lines representing the file to
             document. lines should be the result of file.readlines().
-        jline (int): the index at which you wish to start the search
         indent (int, optional): the indentation at which you are looking for the
             docstring (typically 0, 4, 8, ...). Defaults to 0.
     Returns:
+        line: the current line
         {'name': str, 'inheritance': str, 'modules':list of str, 'variables':
             list of str, 'functions':list of function dictionaries (see
             get_function()), 'docstring':str}: dictionary with the name of the
             class, its inheritance, its modules, variables, methods and the
             class's docstring.
-        int: new jline index.
     '''
-    jline = jline - 1 if jline > 0 else 0
-    if jline < len(lines):
-        line = lines[jline]
-        jline += 1
-    else:
-        return None, jline
-    line = line.split('#')[0].rstrip()
     res = re.search('^ {'+str(indent)+'}class ' +
                     VALID_VAR+LEFT_PAR+'(.*)'+RIGHT_PAR+':$', line)
     if res:
@@ -307,41 +266,42 @@ def get_class(lines, jline, indent=0):
         modules = []
         variables = []
         functions = []
-        ## Docstring
-        line, jline = next_line(lines, jline)
-        indent = get_indent(line)
-        indent0 = indent
-        docstring, jline = get_docstring(lines, jline, indent=indent,
-                                         skip_first=False)
-        while indent >= indent0 and jline < len(lines):
-            line, jline = next_line(lines, jline)
-            indent = get_indent(line)
-            ## Look for imported modules
-            module = get_module(line, indent=indent0)
-            if module:
-                modules.append(module)
-                continue
-            ## Look for variables
-            variable = get_variable(line, indent=indent0)
-            if variable:
-                variables.append(variable)
-                continue
-            ## Look for functions
-            function, jline = get_function(lines, jline, indent=indent0)
-            if function:
-                functions.append(function)
-                continue
-        jline -= 1
-        modules = sorted(modules)
-        variables = sorted(variables, key=itemgetter('name'))
-        functions = sorted(functions, key=itemgetter('name'))
-        return ({'name':name,
-                 'inheritance':inheritance,
-                 'modules':modules,
-                 'functions':functions,
-                 'variables':variables,
-                 'docstring':docstring}, jline)
-    return None, jline
+        try:
+            ## Docstring
+            line = lines.next()
+            indent0 = get_indent(line)
+            line, docstring = get_docstring(line, lines, indent=indent0)
+            while get_indent(line) >= indent0:
+                ## Look for imported modules
+                module = get_module(line, indent=indent0)
+                if module:
+                    modules.append(module)
+                    continue
+                ## Look for variables
+                variable = get_variable(line, indent=indent0)
+                if variable:
+                    variables.append(variable)
+                    continue
+                ## Look for functions
+                line, function = get_function(line, lines, indent=indent0)
+                if function:
+                    functions.append(function)
+                    continue
+                line = lines.next()
+            modules = sorted(modules)
+            variables = sorted(variables, key=itemgetter('name'))
+            functions = sorted(functions, key=itemgetter('name'))
+        except StopIteration:
+            line = None
+            pass
+
+        return (line, {'name':name,
+                       'inheritance':inheritance,
+                       'modules':modules,
+                       'functions':functions,
+                       'variables':variables,
+                       'docstring':docstring})
+    return line, None
 
 def get_help(module_file_name, output=False):
     '''
@@ -716,72 +676,146 @@ def parse(module_file_name):
     if not isinstance(module_file_name, str):
         raise TypeError("Argument must be a string")
 
-    mname, extension = os.path.splitext(os.path.basename(module_file_name))
-
-    if extension == '':
-        if module_file_name.endswith(os.path.sep):
-            module_file_name = os.path.split(module_file_name)[0]
-        pkg = pkgutil.get_loader(module_file_name)
-        if not pkg:
-            raise IOError('Module '+module_file_name+' could not be loaded')
-        modulename = pkg.fullname
-        module_file_name = pkg.filename
-        if not module_file_name.endswith('.py'):
-            module_file_name = os.path.join(pkg.filename, '__init__.py')
-
-    elif extension == '.pyc':
-        module_file_name = module_file_name[:-1]
-        modulename = mname
-    elif extension != '.py':
-        raise FileTypeError("Wrong file type. This function can only handle "
-                            "python files ('.py') or python modules.")
+    res = re.match('(.*)/__init__\.py', module_file_name)
+    if res:
+        modulename = res.group(1)
     else:
-        modulename = mname
+        mname, extension = os.path.splitext(os.path.basename(module_file_name))
+
+        if extension == '':
+            if module_file_name.endswith(os.path.sep):
+                module_file_name = os.path.split(module_file_name)[0]
+            pkg = pkgutil.get_loader(module_file_name)
+            if not pkg:
+                modulename = module_file_name
+                module_file_name = os.path.join(module_file_name, '__init__.py')
+                if not os.path.exists(module_file_name):
+                    raise IOError('Module '+module_file_name+' could not be loaded')
+            else:
+                modulename = pkg.fullname
+                module_file_name = pkg.filename
+            if not module_file_name.endswith('.py'):
+                module_file_name = os.path.join(pkg.filename, '__init__.py')
+
+        elif extension == '.pyc':
+            module_file_name = module_file_name[:-1]
+            modulename = mname
+        elif extension != '.py':
+            raise FileTypeError("Wrong file type. This function can only handle "
+                            "python files ('.py') or python modules.")
+        else:
+            modulename = mname
 
     modules = []
     variables = []
     functions = []
     classes = []
     version = ''
-    with open(module_file_name, 'r') as the_file:
-        lines = the_file.readlines()
-    nlines = len(lines)
-    jline = 0
-    line, jline = next_line(lines, jline)
-    description, jline = get_docstring(lines, jline, skip_first=False)
-    while jline < nlines:
-        line, jline = next_line(lines, jline)
-        ## Look for imported modules
-        module = get_module(line)
-        if module:
-            modules.append(module)
-            continue
-        ## Look for version number
-        vers = get_version(line)
-        if vers:
-            version = vers
-            continue
-        ## Look for variables
-        variable = get_variable(line)
-        if variable:
-            variables.append(variable)
-            continue
-        ## Look for functions
-        function, jline = get_function(lines, jline)
-        if function:
-            functions.append(function)
-            continue
-        ## Look for classes
-        cla, jline = get_class(lines, jline)
-        if cla:
-            classes.append(cla)
-            continue
-    modules = sorted(modules)
-    variables = sorted(variables, key=itemgetter('name'))
-    functions = sorted(functions, key=itemgetter('name'))
-    classes = sorted(classes, key=itemgetter('name'))
+    description = ''
+    the_file = open(module_file_name, 'r')
+    lines = non_empty_lines(the_file)
+    try:
+        line = lines.next()
+        line, description = get_docstring(line, lines)
+
+        while line != None:
+            ## Look for imported modules
+            module = get_module(line)
+            if module:
+                modules.append(module)
+                line = lines.next()
+                continue
+            ## Look for version number
+            vers = get_version(line)
+            if vers:
+                version = vers
+                line = lines.next()
+                continue
+            ## Look for variables
+            variable = get_variable(line)
+            if variable:
+                variables.append(variable)
+                line = lines.next()
+                continue
+            ## Look for functions
+            line, function = get_function(line, lines)
+            if function:
+                functions.append(function)
+                continue
+            ## Look for classes
+            line, cla = get_class(line, lines)
+            if cla:
+                classes.append(cla)
+                continue
+            #print 'Non-processed line: '+line
+            line = lines.next()
+        modules = sorted(modules)
+        variables = sorted(variables, key=itemgetter('name'))
+        functions = sorted(functions, key=itemgetter('name'))
+        classes = sorted(classes, key=itemgetter('name'))
+    
+    except StopIteration:
+        pass
+
+    the_file.close()
+
     return (modulename, description, version, modules, variables, functions,
             classes)
+
+def _add_missing_docstring(module_file_name):
+    '''
+
+
+    Args:
+        module_file_name (): .
+
+    Returns:
+
+    Raises:
+    '''
+    (_, _, _, _, _, functions, _) = parse(module_file_name)
+    withoutdocstrings = set([])
+    for function in functions:
+        if function['docstring'] == '':
+            withoutdocstrings.add(function['name'])
+    if len(withoutdocstrings) == 0:
+        return
+    
+    the_file = open(module_file_name, 'r')
+    lines = all_lines(the_file)
+    try:
+        line = lines.next()
+        while line:
+            res = re.search('^def '+VALID_VAR+LEFT_PAR+'(.*?)('+
+                            RIGHT_PAR+':)?$', line)
+            if res:
+                name = res.group(1)
+                if not name in withoutdocstrings:
+                    yield line
+                    line = lines.next()
+                    continue
+                for function in functions:
+                    if function['name'] == name:
+                        func = function
+                        break
+                yield line
+                endpar = res.group(3)
+                while not endpar:
+                    line = lines.next()
+                    yield line
+                    res2 = re.search('^ *(.*?)('+RIGHT_PAR+':)?$', line)
+                    if res2:
+                        endpar = res2.group(2)
+                doclines = _make_function_docstring(func)
+                for dline in doclines:
+                    yield dline
+            else:
+                yield line
+            line = lines.next()
+    except StopIteration:
+        pass
+   
+    the_file.close()
 
 def add_missing_docstring(module_file_name):
     '''
@@ -794,37 +828,13 @@ def add_missing_docstring(module_file_name):
 
     Raises:
     '''
-    with open(module_file_name, 'r') as the_file:
-        lines = the_file.readlines()
-    nlines = len(lines)
-    jline = 0
-    while jline < nlines:
-        line, jline = next_line(lines, jline)
-        indent = get_indent(line)
-        ## Look for functions
-        current_jl = jline
-        # bug here with multiple lines => current_jl is wrong => docstring insert at wrong position
-        function, jline = get_function(lines, jline, indent=indent)
-        if function:
-            someline = lines[current_jl - 1]
-            someline = someline.split('#')[0].rstrip()
-            res = re.search('^.*?'+RIGHT_PAR+':$', someline)
-            while not res:
-                current_jl += 1
-                someline = lines[current_jl - 1]
-                someline = someline.split('#')[0].rstrip()
-                res = re.search('^.*?'+RIGHT_PAR+':$', someline)
-            docstring = make_function_docstring(function, indent=indent,
-                                                verbose=False)
-            if docstring:
-                docstrarr = [val+'\n' for val in docstring.split('\n')]
-                lines = lines[:current_jl] + docstrarr + lines[current_jl:]
-                jline += len(docstrarr)-1
-                nlines += len(docstrarr)
-    with open(module_file_name, 'w') as the_file:
-        the_file.writelines(lines)
+    copyfile = module_file_name.split('.')[0]+'_copy.py'
+    newlines = _add_missing_docstring(module_file_name)
+    with open(copyfile, 'w') as the_file:
+        for line in newlines:
+            the_file.write(line)
 
-def make_function_docstring(func, indent=0, verbose=True):
+def _make_function_docstring(func, indent=0, verbose=True):
     '''
 
 
@@ -841,24 +851,42 @@ def make_function_docstring(func, indent=0, verbose=True):
         if verbose:
             print ('Warning: the function "'+func['name']+
                    '" already has a docstring')
-        return ''
-    wspace = ''.join([' ']*(indent+4))
-    astr = wspace+"'''"
-    astr += '\n\n'
-    astr += '\n'+wspace+'Args:'
+        return
+    wspace = ' '*(indent+4)
+    yield wspace+"'''\n"
+    yield '\n'
+    yield '\n'
+    yield wspace+'Args:\n'
     for arg in func['args']:
         if arg != 'self':
-            astr += '\n'+wspace+'    {0} (): .'.format(arg)
+            yield wspace+'    {0} (): .\n'.format(arg)
     for kwd, default in zip(func['keywords'], func['defaults']):
-        astr += '\n'+wspace+('    {0} (, optional): . '
-                             'Defaults to {1}.').format(kwd, default)
-    astr += '\n'
-    astr += '\n'+wspace+'Returns:'
-    astr += '\n'
-    astr += '\n'+wspace+'Raises:'
+        yield wspace+('    {0} (, optional): . '
+                      'Defaults to {1}. \n').format(kwd, default)
+    yield '\n'
+    yield wspace+'Returns:\n'
+    yield '\n'
+    yield wspace+'Raises:\n'
     for exc in func['exceptions']:
-        astr += '\n'+wspace+'    {0}'.format(exc)
-    astr += '\n'+wspace+"'''"
+        yield wspace+'    {0}\n'.format(exc)
+    yield wspace+"'''\n"
+
+def make_function_docstring(func, indent=0, verbose=True):
+    '''
+
+
+    Args:
+        func (): .
+        indent (, optional): . Defaults to 0.
+        verbose (, optional): . Defaults to True.
+
+    Returns:
+
+    Raises:
+    '''
+    astr = ''
+    for line in _make_function_docstring(func, indent=indent, verbose=verbose):
+        astr += line
     return astr
 
 def prepare_docstring(module_file_name, function_name):
@@ -872,43 +900,48 @@ def prepare_docstring(module_file_name, function_name):
     Raises:
         ValueError
     '''
-    (_, _, _, _, _, functions, classes) = parse(module_file_name)
+    ## not handling methods anymore (several classes can have the same method)
+    (_, _, _, _, _, functions, _) = parse(module_file_name)
     for function in functions:
         if function_name == function['name']:
-            print make_function_docstring(function)
-            return
-    for cla in classes:
-        for function in cla['functions']:
-            if function_name == function['name']:
-                print make_function_docstring(function)
-                return
+            for line in _make_function_docstring(function):
+                print line.rstrip()
+
     raise ValueError('Function "'+function_name+'" not found in '+module_file_name)
-##########################
+
 if __name__ == '__main__':
 
     def usage(exit_status):
         '''
-
-
-        Args:
-            exit_status (): .
-
-        Returns:
-
-        Raises:
+        Creates documentation for python modules
         '''
-        msg = "Usage: mypydoc.py module_file_name [OPTIONS]\n"
-        msg += "Creates documentation for a python module.\n"
+        msg = "\ndocu creates documentation for python modules\n\n"
+        msg += "Usage: \n\n"
+        msg += "    docu [OPTIONS] module\n\n"
+        msg += "Options:\n\n"
+        msg += "    -?, --help: prints the usage of the program with possible\n"
+        msg += "                options.\n\n"
+        msg += "    -h, --html: creates an .html doc file \n\n"
+        msg += "    -d, --directory: Specifies the directory where to save \n"
+        msg += "               the doc files. By default, it is the\n"
+        msg += "               current directory.\n"
+        msg += "    -t, --text: creates an .txt doc file \n\n"
+
         print msg
         sys.exit(exit_status)
 
     import getopt
-   # parse command line options/arguments
+
+    # parse command line options/arguments
     try:
-        OPTS, ARGS = getopt.getopt(sys.argv[1:], "htd:", ["html", "text",
+        OPTS, ARGS = getopt.getopt(sys.argv[1:], "?htd:", ["help", "html", "text",
                                                           "directory="])
     except getopt.GetoptError:
         usage(2)
+
+    if len(ARGS) == 0:
+        usage(2)
+
     OUTPUT = 'screen'
     DIR = ''
     for o, argument in OPTS:
@@ -919,6 +952,7 @@ if __name__ == '__main__':
         if o in ("-h", "--html"):
             OUTPUT = 'html'
     MODULE = ARGS[0]
+
     if OUTPUT == 'screen':
         get_help(MODULE)
     elif OUTPUT == 'html':
