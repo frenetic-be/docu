@@ -81,8 +81,16 @@ def get_module(line, indent=0):
                     '{0} *(as  *{1})?$'.format(VALID_VAR, VALID_VAR), line)
     if res:
         return res.group(1)
+    res = re.search('^ {'+str(indent)+'}import '+
+                    '{0}\..*? *(as  *{1})?$'.format(VALID_VAR, VALID_VAR), line)
+    if res:
+        return res.group(1)
     res = re.search('^ {'+str(indent)+'}from '+
                     '{0} *import *.*$'.format(VALID_VAR), line)
+    if res:
+        return res.group(1)
+    res = re.search('^ {'+str(indent)+'}from '+
+                    '{0}\..*? *import *.*$'.format(VALID_VAR), line)
     if res:
         return res.group(1)
     return
@@ -276,16 +284,19 @@ def get_class(line, lines, indent=0):
                 module = get_module(line, indent=indent0)
                 if module:
                     modules.append(module)
+                    line = lines.next()
                     continue
                 ## Look for variables
                 variable = get_variable(line, indent=indent0)
                 if variable:
                     variables.append(variable)
+                    line = lines.next()
                     continue
                 ## Look for functions
                 line, function = get_function(line, lines, indent=indent0)
                 if function:
                     functions.append(function)
+                    line = lines.next()
                     continue
                 line = lines.next()
             modules = sorted(modules)
@@ -370,8 +381,8 @@ def get_help(module_file_name, output=False):
             astr += '\n' + '     |      ' + '\n     |      '.join(cla['modules'])
             astr += '\n' + '     |  '
             astr += '\n' + '     |  ' + 'VARIABLES'
-            astr += ('\n' + '     |      ' + '\n     |'
-                     '      ').join(val['name'] for val in cla['variables'])
+            astr += '\n' + '     |      '
+            astr += '\n     |'.join(val['name'] for val in cla['variables'])
             astr += '\n' + '     |  '
             astr += '\n' + '     |  ' + 'FUNCTIONS'
             astr += '\n' + '     |  '
